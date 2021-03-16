@@ -3,7 +3,7 @@
 # downloaded from https://cps.ipums.org.
 
 # Set up
-setwd("~/Documents/OportUNITY/Food Security Map/Data")
+#setwd("~/Documents/OportUNITY/Food Security Map/Data")
 cps <- read.csv("cps(clean).csv")
 acs <- read.csv("acs(clean).csv")
 
