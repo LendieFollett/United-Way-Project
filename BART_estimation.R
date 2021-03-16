@@ -110,14 +110,23 @@ acs$NAME <- gsub("[,A-Za-z ]","",substr(acs$X, 16,nchar(acs$X)))
 ia_shp_join <- left_join(ia_shp, acs, by="NAME" )
 str(ia_shp_join)
 
-ggplot(aes(fill  = bart_fshat),data = ia_shp_join) +
+ggplot(aes(fill  = bart_fshat, colour=bart_fshat),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c()
+  scale_fill_viridis_c()+
+  scale_colour_viridis_c()
 #i feel like this shouldn't take as long as it does.......?
+#ah, it's because it's a many-to-many merge
+#can we get more geoID's on the acs data?
 
-#Individual block g
-ggplot(aes(fill  = bart_fshat),data = subset(ia_shp_join, grepl("Block Group 1", X))) +
+
+polk_shp <- tracts(state = 'IA', county = "Polk")
+polk_shp_join <- left_join(polk_shp, acs, by="NAME" )
+str(polk_shp_join)
+
+ggplot(aes(fill  = bart_fshat, colour=bart_fshat),data = polk_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c()
+  scale_fill_viridis_c()+
+  scale_colour_viridis_c()
+
 
 
