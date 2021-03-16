@@ -49,6 +49,8 @@ breg <- wbart(cps_X,cps$fs,
       printevery=1000L,
       x.test = acs_X)
 
+table(cps$fs)
+#There are quite a few 0's in this data...
 
 breg_bin <- pbart(cps_X,
                   cps$fs != 0, #predicting presence of food insecurity
@@ -59,7 +61,7 @@ breg_bin <- pbart(cps_X,
               x.test = acs_X)
 #fit on nonzero data
 breg_num <- gbart(cps_X[cps$fs != 0,],
-                  cps$fs[cps$fs != 0], #predicting presence of food insecurity
+                  cps$fs[cps$fs != 0], #predicting severity given presence of insecurity
                   nskip=5000,
                   sigdf=3, #default is 3
                   ntree = 200,
