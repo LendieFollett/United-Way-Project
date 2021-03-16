@@ -3,6 +3,10 @@ library(BART)
 library(ggplot2)
 library(reshape2)
 library(gridExtra)
+library(tigris)
+library(sp)
+library(tidycensus)
+library(rgeos)#spatial
 
 cps <- read.csv("cps(clean).csv")#household level
 acs <- read.csv("acs(clean).csv")#aggregated (sums) to census tract
@@ -74,7 +78,6 @@ breg_num <- gbart(cps_X[cps$fs != 0,],
 
 
 #plot in-sample residuals
-
 p1 <- qplot(x = predict(reg), y = residuals(reg)) + ggtitle("OLR") +scale_y_continuous(limits = c(-4, 7))
 p2 <- qplot(x = breg$yhat.train.mean, y = cps$fs - breg$yhat.train.mean) + ggtitle("BART")+scale_y_continuous(limits = c(-4, 7))
 p3 <- qplot(x = breg_bin$prob.train.mean*breg_num$yhat.test.mean, y = cps$fs - breg_bin$prob.train.mean*breg_num$yhat.test.mean) + ggtitle("2 step BART")+scale_y_continuous(limits = c(-4, 7))
@@ -97,5 +100,24 @@ acs$bart_fshat <- breg$yhat.test.mean
 ggplot(data=acs) +
   geom_point(aes(x = olr_fshat, y = bart_fshat)) +
   geom_abline(aes(intercept = 0, slope = 1))
+
+##### MAPPING
+
+ia_shp <- tracts(state = 'IA')
+#for merging - just take tract number
+acs$NAME <- gsub("[,A-Za-z ]","",substr(acs$X, 16,nchar(acs$X)))
+#join onto shape file
+ia_shp_join <- left_join(ia_shp, acs, by="NAME" )
+str(ia_shp_join)
+
+ggplot(aes(fill  = bart_fshat),data = ia_shp_join) +
+  geom_sf()+
+  scale_fill_viridis_c()
+#i feel like this shouldn't take as long as it does.......?
+
+#Individual block g
+ggplot(aes(fill  = bart_fshat),data = subset(ia_shp_join, grepl("Block Group 1", X))) +
+  geom_sf()+
+  scale_fill_viridis_c()
 
 
