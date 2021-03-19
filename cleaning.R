@@ -3,9 +3,8 @@
 # downloaded from https://cps.ipums.org.
 
 # Set up
-setwd("~/Documents/OportUNITY/Food Security Map/Data")
+setwd("~/Documents/OportUNITY/United-Way-Project")
 library(acs)
-library(readxl)
 
 # API key
 api.key.install(key="4a6312d77db109879039890c413e71c845d9c3ee")
@@ -43,11 +42,11 @@ acs$households <- acs$population/acs$avg_hhsize
 write.csv(acs, "acs(clean).csv")
 
 # Get CPS data
-cps <- data.frame(read_excel("cps(raw).xlsx"))
+cps <- read.csv("cps(raw).csv")
 cps <- cps[cps$STATEFIP==19,]
-cps <- cps[, c("CPSID", "PERNUM", "FSRAWSCRA", "AGE", "SEX",  "FAMSIZE", "RACE", "HISPAN", 
-    "EDUC", "EMPSTAT","MARST")]
-cps$SEX <- cps$SEX - 1
+cps <- cps[, c("CPSID", "PERNUM", "FSRAWSCRA","FSTOTXPNC", "AGE", "SEX",  "FAMSIZE", "RACE", 
+    "HISPAN", "EDUC", "EMPSTAT","MARST")]
+cps$SEX <- cps$SEX - 1    # Create dummy variables
 cps$CHILD <- ifelse(cps$AGE < 18, 1, 0)
 cps$ELDERLY <- ifelse(cps$AGE > 64, 1, 0)
 cps$BLACK <- ifelse(cps$RACE==200, 1, 0)
@@ -56,10 +55,13 @@ cps$EDUC <- as.integer(cps$EDUC %in% c(91,92,111,123,124,125))
 cps$EMP <- as.integer(cps$EMPSTAT %in% c(1,10,12))
 cps$MARRIED <- as.integer(cps$MARST %in% c(1,2))
 cps <- merge(
-  aggregate(list(fs=cps$FSRAWSCRA, hhsize=cps$FAMSIZE), by = list(id=cps$CPSID), mean),
+  aggregate(list(fsecurity=cps$FSRAWSCRA, fexpend=cps$FSTOTXPNC, hhsize=cps$FAMSIZE), 
+      by = list(id=cps$CPSID), mean),
   aggregate(list(female=cps$SEX, kids=cps$CHILD, elderly=cps$ELDERLY, black=cps$BLACK, 
       hispanic=cps$HISPANIC, education=cps$EDUC, employed=cps$EMP,
       married=cps$MARRIED), by = list(id=cps$CPSID), sum))
-cps <- cps[cps$fs!=99,]
-cps <- cps[cps$fs!=98,]
+cps$fsecurity[cps$fsecurity==98] <- NA   # Clean up missing values
+cps$fsecurity[cps$fsecurity==99] <- NA
+cps$fexpend[cps$fexpend==999] <- NA
+cps$fexpend <- cps$fexpend/cps$hhsize  # In per person terms
 write.csv(cps, "cps(clean).csv")
