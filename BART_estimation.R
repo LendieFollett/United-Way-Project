@@ -1,3 +1,4 @@
+rm(list = ls())
 library(dplyr)
 library(BART)
 library(ggplot2)
@@ -40,19 +41,19 @@ acs_X <- acs %>%
 #The latter is what we would be predicting.
 #Lose correlation among x variables. 
 
-table(cps$fs)
-qplot(cps$fs, geom = "histogram", binwidth = 1)
+table(cps$fsecurity)
+qplot(cps$fsecurity, geom = "histogram", binwidth = 1)
 #There are quite a few 0's in this data... try just predicting
 #whether or not household answered "Yes" at least once (binary)
 
 # Estimate CPS model
-reg <- glm(fs != 0 ~ hhsize + female + kids + elderly + black + hispanic + education +
+reg <- glm(as.numeric(fsecurity != 0) ~ hhsize + female + kids + elderly + black + hispanic + education +
             employed + married, data=cps, family = binomial)
 coeffs <- coefficients(reg)
 
 
 breg_bin <- pbart(cps_X,
-                  cps$fs != 0, #predicting presence of food insecurity
+                  as.numeric(cps$fsecurity != 0), #predicting presence of food insecurity
               nskip=5000,
               ntree = 200,
               ndpost=5000,
@@ -73,21 +74,23 @@ qplot(olr_fshat,bart_fshat, data = acs)+
   labs(x = "Logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
+#effects of x variables on predicted probability
 ggplot(data=acs) +
-  geom_point(aes(x = female/population, y = olr_fshat)) 
+  geom_smooth(aes(x = female/population, y = olr_fshat)) +
+  geom_smooth(aes(x = female/population, y = bart_fshat, colour = "red")) 
 ggplot(data=acs) +
-  geom_point(aes(x = avg_hhsize, y = olr_fshat)) 
-ggplot(data=acs) +
-  geom_point(aes(x = employed/population, y = bart_fshat)) 
+  geom_smooth(aes(x = employed/population, y = olr_fshat)) +
+  geom_smooth(aes(x = employed/population, y = bart_fshat, colour = "red")) 
 
 
 ##### MAPPING
 
 ia_shp <- tracts(state = 'IA')
-#for merging - just take tract number
-acs$NAME <- gsub("[,A-Za-z ]","",substr(acs$X, 16,nchar(acs$X)))
+#for merging - use GEOID
+#acs$NAME <- gsub("[,A-Za-z ]","",substr(acs$X, 16,nchar(acs$X)))
 #join onto shape file
-ia_shp_join <- left_join(ia_shp, acs, by="NAME" )
+acs$GEOID <- as.character(acs$GEOID)
+ia_shp_join <- left_join(ia_shp, acs, by="GEOID" )
 str(ia_shp_join)
 
 ggplot(aes(fill  = bart_fshat, colour=bart_fshat),data = ia_shp_join) +
