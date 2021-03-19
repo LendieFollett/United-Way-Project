@@ -39,22 +39,17 @@ acs_X <- acs %>%
 #The average of predicted values != predicted value for avg household
 #The latter is what we would be predicting.
 #Lose correlation among x variables. 
-# Estimate CPS model
-reg <- lm(fs ~ hhsize + female + kids + elderly + black + hispanic + education +
-            employed + married, data=cps)
-coeffs <- coefficients(reg)
-breg <- wbart(cps_X,cps$fs,
-      nskip=5000,
-      sigdf=3, #default is 3
-      ntree = 200,
-      sigquant = .95,#default is .9
-      sigest = sqrt(mean(reg$residuals^2)),
-      ndpost=5000,
-      printevery=1000L,
-      x.test = acs_X)
 
 table(cps$fs)
-#There are quite a few 0's in this data...
+qplot(cps$fs, geom = "histogram", binwidth = 1)
+#There are quite a few 0's in this data... try just predicting
+#whether or not household answered "Yes" at least once (binary)
+
+# Estimate CPS model
+reg <- glm(fs != 0 ~ hhsize + female + kids + elderly + black + hispanic + education +
+            employed + married, data=cps, family = binomial)
+coeffs <- coefficients(reg)
+
 
 breg_bin <- pbart(cps_X,
                   cps$fs != 0, #predicting presence of food insecurity
@@ -63,43 +58,28 @@ breg_bin <- pbart(cps_X,
               ndpost=5000,
               printevery=1000L,
               x.test = acs_X)
-#fit on nonzero data
-breg_num <- gbart(cps_X[cps$fs != 0,],
-                  cps$fs[cps$fs != 0], #predicting severity given presence of insecurity
-                  nskip=5000,
-                  sigdf=3, #default is 3
-                  ntree = 200,
-                  sigquant = .95,#default is .9
-                  sigest = sqrt(mean(reg$residuals^2)),
-                  ndpost=5000,
-                  printevery=1000L,
-                  x.test = cps_X)
 
 
-
-#plot in-sample residuals
-p1 <- qplot(x = predict(reg), y = residuals(reg)) + ggtitle("OLR") +scale_y_continuous(limits = c(-4, 7))
-p2 <- qplot(x = breg$yhat.train.mean, y = cps$fs - breg$yhat.train.mean) + ggtitle("BART")+scale_y_continuous(limits = c(-4, 7))
-p3 <- qplot(x = breg_bin$prob.train.mean*breg_num$yhat.test.mean, y = cps$fs - breg_bin$prob.train.mean*breg_num$yhat.test.mean) + ggtitle("2 step BART")+scale_y_continuous(limits = c(-4, 7))
-
-grid.arrange(p1, p2,p3, nrow = 1)
-
-qplot(predict(reg),breg_bin$prob.train.mean*breg_num$yhat.test.mean)+
+#compare in-sample (cps) predicted values
+qplot(predict(reg, type = "response"),breg_bin$prob.train.mean)+
+  labs(x = "Logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
 ####PREDICTION ON ACS
+acs$olr_fshat <- predict(reg, acs_X, type = "response")
+acs$bart_fshat <- breg_bin$prob.test.mean
 
-acs$olr_fshat <- coeffs[1]*acs$households + coeffs[2]*acs$population + coeffs[3]*acs$female +
-  coeffs[4]*acs$kids + coeffs[5]*acs$elderly + coeffs[6]*acs$black + 
-  coeffs[7]*acs$hispanic + coeffs[8]*acs$education + coeffs[9]*acs$employed +
-  coeffs[10]*acs$married
-acs$olr_fshat <- acs$olr_fshat/acs$households
-
-acs$bart_fshat <- breg$yhat.test.mean
+qplot(olr_fshat,bart_fshat, data = acs)+
+  labs(x = "Logistic regression probability", y = "BART probability")+
+  geom_abline(aes(intercept = 0, slope = 1))
 
 ggplot(data=acs) +
-  geom_point(aes(x = olr_fshat, y = bart_fshat)) +
-  geom_abline(aes(intercept = 0, slope = 1))
+  geom_point(aes(x = female/population, y = olr_fshat)) 
+ggplot(data=acs) +
+  geom_point(aes(x = avg_hhsize, y = olr_fshat)) 
+ggplot(data=acs) +
+  geom_point(aes(x = employed/population, y = bart_fshat)) 
+
 
 ##### MAPPING
 
