@@ -128,28 +128,38 @@ qplot(olr_pred,bart_pred, data = acs)+
 
 ##### MAPPING
 
-ia_shp <- tracts(state = 'IA')
+#ia_shp <- tracts(state = 'IA') #this is census tracts
+ia_shp <- block_groups(state = "IA") #this is block groups w/in tracts
 #for merging - use GEOID
-#acs$NAME <- gsub("[,A-Za-z ]","",substr(acs$X, 16,nchar(acs$X)))
 #join onto shape file
-acs$GEOID <- as.character(acs$GEOID)
+acs$GEOID <- as.character(paste0(acs$GEOID, substr(acs$X, 13, 13)))
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" )
 str(ia_shp_join)
 
-ggplot(aes(fill  = bart_fshat, colour=bart_fshat),data = ia_shp_join) +
+ggplot(aes(fill  = bart_bin_pred, colour=bart_bin_pred),data = ia_shp_join) +
   geom_sf()+
   scale_fill_viridis_c()+
   scale_colour_viridis_c()
-#i feel like this shouldn't take as long as it does.......?
-#ah, it's because it's a many-to-many merge
-#can we get more geoID's on the acs data?
+
+ggplot(aes(fill  = bart_pred, colour=bart_pred),data = ia_shp_join) +
+  geom_sf()+
+  scale_fill_viridis_c()+
+  scale_colour_viridis_c()
 
 
-polk_shp <- tracts(state = 'IA', county = "Polk")
-polk_shp_join <- left_join(polk_shp, acs, by="NAME" )
+#Can subset by county - we will have the ability to make this reactive in the dashboard environment
+
+polk_shp <- block_groups(state = 'IA', county = "Polk")
+polk_shp_join <- left_join(polk_shp, acs, by="GEOID" )
 str(polk_shp_join)
 
-ggplot(aes(fill  = bart_fshat, colour=bart_fshat),data = polk_shp_join) +
+ggplot(aes(fill  = bart_bin_pred, colour=bart_bin_pred),data = polk_shp_join) +
+  geom_sf()+
+  scale_fill_viridis_c()+
+  scale_colour_viridis_c()
+
+
+ggplot(aes(fill  = bart_pred, colour=bart_pred),data = polk_shp_join) +
   geom_sf()+
   scale_fill_viridis_c()+
   scale_colour_viridis_c()
