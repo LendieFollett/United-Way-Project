@@ -21,8 +21,9 @@ mytable4 <- acs.lookup(endyear=2015, table.number="B02001")
 mytable5 <- acs.lookup(endyear=2015, table.number="B15003")
 mytable6 <- acs.lookup(endyear=2015, table.number="B23025")
 mytable7 <- acs.lookup(endyear=2015, table.number="B12001")
+mytable8 <- acs.lookup(endyear=2015, table.number="B22010")
 myvars <- mytable1[c(1,3:6,20:30,44:49)] + mytable2[1] + mytable3[3] + 
-  mytable4[3] + mytable5[21:25] + mytable6[c(4,6)] + mytable7[c(4,13)] 
+  mytable4[3] + mytable5[21:25] + mytable6[c(4,6)] + mytable7[c(4,13)] + mytable8[c(3,6)]
 mydata <- acs.fetch(endyear=myendyear, span=myspan, geography=mygeo, variable=myvars)
 acs <- data.frame(mydata@estimate)
 acs$kids <- rowSums(acs[,c("B01001_003","B01001_004","B01001_005","B01001_006",
@@ -34,10 +35,11 @@ acs$education <- rowSums(acs[,c("B15003_021","B15003_022","B15003_023","B15003_0
     "B15003_025")])
 acs$employed <- rowSums(acs[,c("B23025_004","B23025_006")])
 acs$married <- rowSums(acs[,c("B12001_004","B12001_013")])
+acs$disability <- rowSums(acs[,c("B22010_003","B22010_006")])
 acs <- acs[,c("B01001_001","B01001_026","B25010_001","B03003_003","B02001_003",
-    "kids","elderly","education","employed", "married")]
+    "kids","elderly","education","employed","married","disability")]
 colnames(acs) <- c("population", "female", "avg_hhsize","hispanic","black","kids",
-    "elderly","education","employed","married")
+    "elderly","education","employed","married","disability")
 acs$households <- acs$population/acs$avg_hhsize
 write.csv(acs, "acs(clean).csv")
 
@@ -45,7 +47,8 @@ write.csv(acs, "acs(clean).csv")
 cps <- read.csv("cps(raw).csv")
 cps <- cps[cps$STATEFIP==19,]
 cps <- cps[, c("CPSID", "PERNUM", "FSRAWSCRA","FSTOTXPNC", "AGE", "SEX",  "FAMSIZE", "RACE", 
-    "HISPAN", "EDUC", "EMPSTAT","MARST")]
+    "HISPAN", "EDUC", "EMPSTAT","MARST", "DIFFHEAR", "DIFFEYE", "DIFFREM", "DIFFPHYS", 
+    "DIFFMOB", "DIFFCARE")]
 cps$SEX <- cps$SEX - 1    # Create dummy variables
 cps$CHILD <- ifelse(cps$AGE < 18, 1, 0)
 cps$ELDERLY <- ifelse(cps$AGE > 64, 1, 0)
@@ -54,12 +57,15 @@ cps$HISPANIC <- ifelse(cps$HISPAN>0, 1, 0)
 cps$EDUC <- as.integer(cps$EDUC %in% c(91,92,111,123,124,125))
 cps$EMP <- as.integer(cps$EMPSTAT %in% c(1,10,12))
 cps$MARRIED <- as.integer(cps$MARST %in% c(1,2))
+cps$DIFF <- apply(cps[, c("DIFFHEAR","DIFFEYE","DIFFREM","DIFFPHYS","DIFFMOB","DIFFCARE")], 1, max)
+cps$DIFF <- ifelse(cps$DIFF==2, 1, 0)
 cps <- merge(
   aggregate(list(fsecurity=cps$FSRAWSCRA, fexpend=cps$FSTOTXPNC, hhsize=cps$FAMSIZE), 
       by = list(id=cps$CPSID), mean),
   aggregate(list(female=cps$SEX, kids=cps$CHILD, elderly=cps$ELDERLY, black=cps$BLACK, 
       hispanic=cps$HISPANIC, education=cps$EDUC, employed=cps$EMP,
-      married=cps$MARRIED), by = list(id=cps$CPSID), sum))
+      married=cps$MARRIED, disability=cps$DIFF), by = list(id=cps$CPSID), sum))
+cps$disability <- ifelse(cps$disability>0, 1, 0)  # Recode to dummy variable
 cps$fsecurity[cps$fsecurity==98] <- NA   # Clean up missing values
 cps$fsecurity[cps$fsecurity==99] <- NA
 cps$fexpend[cps$fexpend==999] <- NA
