@@ -25,7 +25,10 @@ mytable8 <- acs.lookup(endyear=2015, table.number="B22010")
 myvars <- mytable1[c(1,3:6,20:30,44:49)] + mytable2[1] + mytable3[3] + 
   mytable4[3] + mytable5[21:25] + mytable6[c(4,6)] + mytable7[c(4,13)] + mytable8[c(3,6)]
 mydata <- acs.fetch(endyear=myendyear, span=myspan, geography=mygeo, variable=myvars)
-acs <- data.frame(mydata@estimate)
+acs <- data.frame(GEOID = paste0(str_pad(mydata@geography$state, 2, "left", pad="0"), 
+                                 str_pad(mydata@geography$county, 3, "left", pad="0"), 
+                                 str_pad(mydata@geography$tract, 6, "left", pad="0")),
+                  mydata@estimate)
 acs$kids <- rowSums(acs[,c("B01001_003","B01001_004","B01001_005","B01001_006",
     "B01001_027","B01001_028","B01001_029","B01001_030")])
 acs$elderly <- rowSums(acs[,c("B01001_020","B01001_021","B01001_022","B01001_023",
@@ -36,9 +39,9 @@ acs$education <- rowSums(acs[,c("B15003_021","B15003_022","B15003_023","B15003_0
 acs$employed <- rowSums(acs[,c("B23025_004","B23025_006")])
 acs$married <- rowSums(acs[,c("B12001_004","B12001_013")])
 acs$disability <- rowSums(acs[,c("B22010_003","B22010_006")])
-acs <- acs[,c("B01001_001","B01001_026","B25010_001","B03003_003","B02001_003",
+acs <- acs[,c("GEOID","B01001_001","B01001_026","B25010_001","B03003_003","B02001_003",
     "kids","elderly","education","employed","married","disability")]
-colnames(acs) <- c("population", "female", "avg_hhsize","hispanic","black","kids",
+colnames(acs) <- c("GEOID","population", "female", "avg_hhsize","hispanic","black","kids",
     "elderly","education","employed","married","disability")
 acs$households <- acs$population/acs$avg_hhsize
 write.csv(acs, "acs(clean).csv")
