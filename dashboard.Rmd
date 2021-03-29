@@ -24,6 +24,7 @@ library(sp)
 library(tidycensus)
 library(rgeos)#spatial
 library(DT)#datatable
+library(rmapshaper)
 
 cps <- read.csv("cps(clean).csv")#household level
 acs <- read.csv("acs(clean).csv")#aggregated (sums) to census tract
@@ -58,6 +59,9 @@ ia_shp <- block_groups(state = "IA") #this is block groups w/in tracts
 county_list <- unique(counties("Iowa")$NAME)
 county_list <- county_list[order(county_list)]
 all_counties <-   block_groups(state = 'IA', county = county_list)
+
+ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
+  rmapshaper::ms_simplify( keep = 0.05, keep_shapes = TRUE)
 ```
 
 Predicting Presence of Food Insecurity
@@ -88,30 +92,28 @@ Row {data-height=150}
 ```{r, echo=FALSE}
 
 
-cnty_shp <- reactive({
-  subset(all_counties, COUNTYFP == input$county)
-  #block_groups(state = 'IA', county = input$county)
-  })
-cnty_shp_join <- reactive({left_join(cnty_shp(), acs, by="GEOID" )})
-#for merging - use GEOID
-#join onto shape file
-
-ia_shp_join <- left_join(ia_shp, acs, by="GEOID" )
-
-
 ggplot(aes(fill  = bart_bin_pred, colour=bart_bin_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c()+
-  scale_colour_viridis_c()
+  scale_fill_viridis_c("Predicted \nProbability")+
+  scale_colour_viridis_c("Predicted \nProbability")
 
 ```
 
 ### County-level
 ```{r, echo=FALSE}
+cnty_shp_join <- reactive({
+  subset(all_counties, COUNTYFP == input$county) %>%
+    left_join(acs, by="GEOID" )%>%
+    rmapshaper::ms_simplify( keep = 0.05, keep_shapes = TRUE)
+  #block_groups(state = 'IA', county = input$county)
+  })
+
+#for merging - use GEOID
+#join onto shape file
 renderPlot({ggplot(aes(fill  = bart_bin_pred, colour=bart_bin_pred),data = cnty_shp_join()) +
   geom_sf()+
-  scale_fill_viridis_c()+
-  scale_colour_viridis_c()})
+  scale_fill_viridis_c("Predicted \nProbability")+
+  scale_colour_viridis_c("Predicted \nProbability")})
 
 ```
 
@@ -123,8 +125,8 @@ Row {data-height=150}
 
 ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c()+
-  scale_colour_viridis_c()
+  scale_fill_viridis_c("Predicted \nProbability")+
+  scale_colour_viridis_c("Predicted \nProbability")
 ```
 
 ### County-level
@@ -132,8 +134,8 @@ ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = ia_shp_join) +
 ```{r, echo=FALSE}
 renderPlot({ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = cnty_shp_join()) +
   geom_sf()+
-  scale_fill_viridis_c()+
-  scale_colour_viridis_c()})
+  scale_fill_viridis_c("Predicted \nProbability")+
+  scale_colour_viridis_c("Predicted \nProbability")})
 
 ```
 
@@ -160,31 +162,27 @@ Row {data-height=150}
 -----------------------------------------------------------------------
 ### BART
 ```{r,echo=FALSE}
-#ia_shp <- tracts(state = 'IA') #this is census tracts
-cnty_shp2 <- reactive({
-  subset(all_counties, COUNTYFP == input$county2)
-  #block_groups(state = 'IA', county = input$county)
-  })
-cnty_shp_join2 <- reactive({left_join(cnty_shp2(), acs, by="GEOID" )})
-#for merging - use GEOID
-#join onto shape file
 
-renderPlot({
 ggplot(aes(fill  = bart_pred, colour=bart_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")
-})
+  scale_fill_viridis_c("Predicted \nExpenditure")+
+  scale_colour_viridis_c("Predicted \nExpenditure")
 
 ```
 
 ### County-level
 ```{r,echo=FALSE}
+cnty_shp2 <- reactive({
+  subset(all_counties, COUNTYFP == input$county2)
+  #block_groups(state = 'IA', county = input$county)
+  })
+cnty_shp_join2 <- reactive({left_join(cnty_shp2(), acs, by="GEOID" )})
+
 renderPlot({
 ggplot(aes(fill  = bart_pred, colour=bart_pred),data = cnty_shp_join2()) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")
+  scale_fill_viridis_c("Predicted \nExpenditure")+
+  scale_colour_viridis_c("Predicted \nExpenditure")
 })
 
 ```
@@ -194,11 +192,11 @@ Row {data-height=150}
 
 ###  Regression
 ```{r,echo=FALSE}
-renderPlot({
+
 ggplot(aes(fill  = olr_pred, colour=olr_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")})
+  scale_fill_viridis_c("Predicted \nExpenditure")+
+  scale_colour_viridis_c("Predicted \nExpenditure")
 ```
 
 ### County-level
@@ -206,8 +204,8 @@ ggplot(aes(fill  = olr_pred, colour=olr_pred),data = ia_shp_join) +
 renderPlot({
 ggplot(aes(fill  = olr_pred, colour=olr_pred),data = cnty_shp_join2()) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")})
+  scale_fill_viridis_c("Predicted \nExpenditure")+
+  scale_colour_viridis_c("Predicted \nExpenditure")})
 
 ```
 
