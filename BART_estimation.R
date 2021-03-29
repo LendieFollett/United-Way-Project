@@ -122,15 +122,15 @@ acs$bart_bin_pred <- breg_bin$prob.test.mean
 acs$olr_pred <- predict(reg, acs_X, type = "response")
 acs$bart_pred <- breg$yhat.test.mean
 
-qplot(olr_bin_pred,bart_bin_pred, data = acs)+
+p1 <- qplot(olr_bin_pred,bart_bin_pred, data = acs)+
   labs(x = "Logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
-qplot(olr_pred,bart_pred, data = acs)+
+p2 <- qplot(olr_pred,bart_pred, data = acs)+
   labs(x = "OLR mean", y = "BART mean")+
   geom_abline(aes(intercept = 0, slope = 1))
 
-
+grid.arrange(p1,p2, nrow = 1)
 
 ##### MAPPING
 #maybe:

@@ -165,7 +165,7 @@ cnty_shp2 <- reactive({
   subset(all_counties, COUNTYFP == input$county)
   #block_groups(state = 'IA', county = input$county)
   })
-cnty_shp_join2 <- reactive({left_join(cnty_shp(), acs, by="GEOID" )})
+cnty_shp_join2 <- reactive({left_join(cnty_shp2(), acs, by="GEOID" )})
 #for merging - use GEOID
 #join onto shape file
 
