@@ -56,6 +56,9 @@ breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
               ndpost=5000,
               printevery=1000L,
               x.test = acs_X)
+saveRDS(reg_bin, "reg_bin.RDS")
+saveRDS(breg_bin, "breg_bin.RDS")
+
 #Estimate CPS model - expenditure
 reg<- lm(fexpend ~ hhsize + female + kids + elderly + black + hispanic + education +
                  employed + married + disability, data=cps[!is.na(cps$fexpend),])
@@ -66,6 +69,9 @@ breg <- wbart(cps_X[!is.na(cps$fexpend),],
                   ndpost=5000,
                   printevery=1000L,
                   x.test = acs_X)
+
+saveRDS(reg, "reg.RDS")
+saveRDS(breg, "breg.RDS")
 
 
 #compare in-sample (cps) predicted values

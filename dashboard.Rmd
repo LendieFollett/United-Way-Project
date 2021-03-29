@@ -191,10 +191,10 @@ ggplot(aes(fill  = bart_pred, colour=bart_pred),data = cnty_shp_join2()) +
 Row {data-height=150}
 -----------------------------------------------------------------------
 
-### Logistic Regression
+###  Regression
 ```{r,echo=FALSE}
 renderPlot({
-ggplot(aes(fill  = olr_bin_pred, colour=olr_pred),data = ia_shp_join) +
+ggplot(aes(fill  = olr_pred, colour=olr_pred),data = ia_shp_join) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nProbability")+
   scale_colour_viridis_c("Predicted \nProbability")})
@@ -203,9 +203,19 @@ ggplot(aes(fill  = olr_bin_pred, colour=olr_pred),data = ia_shp_join) +
 ### County-level
 ```{r,echo=FALSE}
 renderPlot({
-ggplot(aes(fill  = olr_bin_pred, colour=olr_pred),data = cnty_shp_join2()) +
+ggplot(aes(fill  = olr_pred, colour=olr_pred),data = cnty_shp_join2()) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nProbability")+
   scale_colour_viridis_c("Predicted \nProbability")})
 
 ```
+
+
+Tabular output
+===================================== 
+
+```{r}
+datatable(data = acs[,c("X","olr_bin_pred", "bart_bin_pred", "olr_pred", "bart_pred")])
+```
+
+
