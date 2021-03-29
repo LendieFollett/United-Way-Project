@@ -162,7 +162,7 @@ Row {data-height=150}
 ```{r,echo=FALSE}
 #ia_shp <- tracts(state = 'IA') #this is census tracts
 cnty_shp2 <- reactive({
-  subset(all_counties, COUNTYFP == input$county)
+  subset(all_counties, COUNTYFP == input$county2)
   #block_groups(state = 'IA', county = input$county)
   })
 cnty_shp_join2 <- reactive({left_join(cnty_shp2(), acs, by="GEOID" )})
