@@ -127,6 +127,8 @@ qplot(olr_pred,bart_pred, data = acs)+
 
 
 ##### MAPPING
+#maybe:
+#https://bookdown.org/robinlovelace/geocompr/adv-map.html#interactive-maps
 
 #ia_shp <- tracts(state = 'IA') #this is census tracts
 ia_shp <- block_groups(state = "IA") #this is block groups w/in tracts
