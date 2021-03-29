@@ -23,6 +23,7 @@ library(tigris)
 library(sp)
 library(tidycensus)
 library(rgeos)#spatial
+library(DT)#datatable
 
 cps <- read.csv("cps(clean).csv")#household level
 acs <- read.csv("acs(clean).csv")#aggregated (sums) to census tract
