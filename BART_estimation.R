@@ -8,6 +8,7 @@ library(tigris)
 library(sp)
 library(tidycensus)
 library(rgeos)#spatial
+library(glmnet)#lasso
 
 cps <- read.csv("cps(clean).csv")#household level
 acs <- read.csv("acs(clean).csv")#aggregated (sums) to census tract
@@ -49,6 +50,17 @@ qplot(cps$fsecurity, geom = "histogram", binwidth = 1)
 # Estimate CPS model - binary presence of >0 "Yes" answer to food insecurity questions
 reg_bin <- glm(as.numeric(fsecurity != 0) ~ hhsize + female + kids + elderly + black + hispanic + education +
             employed + married + disability, data=cps[!is.na(cps$fsecurity),], family = binomial)
+#Lasso regression
+y <- cps[!is.na(cps$fsecurity), "fsecurity"] != 0
+x <- cps[!is.na(cps$fsecurity), c("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
+                                "employed", "married", "disability")] %>%as.matrix()
+
+lasso_bin <- cv.glmnet(x, y,alpha = 1,family = "binomial") #alpha = 1 --> lasso, alpha = 0 --> ridge
+lasso_cv_bin  <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
+plot(lasso_cv_bin)
+optimal_lambda_lasso_bin <- lasso_cv_bin$lambda.min
+
+
 breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
                   as.numeric(cps$fsecurity[!is.na(cps$fsecurity)] != 0), #predicting presence of food insecurity
               nskip=5000,
@@ -56,12 +68,21 @@ breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
               ndpost=5000,
               printevery=1000L,
               x.test = acs_X)
-saveRDS(reg_bin, "reg_bin.RDS")
-saveRDS(breg_bin, "breg_bin.RDS")
+
 
 #Estimate CPS model - expenditure
 reg<- lm(fexpend ~ hhsize + female + kids + elderly + black + hispanic + education +
                  employed + married + disability, data=cps[!is.na(cps$fexpend),])
+#Lasso regression
+y <- cps[!is.na(cps$fexpend), "fexpend"]
+x <- cps[!is.na(cps$fexpend), c("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
+           "employed", "married", "disability")] %>%as.matrix()
+
+lasso <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
+lasso_cv <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
+plot(lasso_cv)
+optimal_lambda_lasso <- lasso_cv$lambda.min
+
 breg <- wbart(cps_X[!is.na(cps$fexpend),],
               cps$fexpend[!is.na(cps$fexpend)], #predicting presence of food insecurity
                   nskip=5000,
@@ -70,8 +91,12 @@ breg <- wbart(cps_X[!is.na(cps$fexpend),],
                   printevery=1000L,
                   x.test = acs_X)
 
-saveRDS(reg, "reg.RDS")
-saveRDS(breg, "breg.RDS")
+####PREDICTION ON ACS
+acs$lasso_bin_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso_bin)
+acs$bart_bin_pred <- breg_bin$prob.test.mean
+
+acs$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso)
+acs$bart_pred <- breg$yhat.test.mean
 
 
 #compare in-sample (cps) predicted values
@@ -82,6 +107,9 @@ qplot(predict(reg_bin, type = "response"),breg_bin$prob.train.mean)+
 qplot(predict(reg, type = "response"),breg$yhat.train.mean)+
   labs(x = "OLR mean", y = "BART mean")+
   geom_abline(aes(intercept = 0, slope = 1))
+
+
+
 
 
 #effects of x variables on predicted probability
@@ -115,12 +143,6 @@ ggplot() +
 
 
 
-####PREDICTION ON ACS
-acs$olr_bin_pred <- predict(reg_bin, acs_X, type = "response")
-acs$bart_bin_pred <- breg_bin$prob.test.mean
-
-acs$olr_pred <- predict(reg, acs_X, type = "response")
-acs$bart_pred <- breg$yhat.test.mean
 
 p1 <- qplot(olr_bin_pred,bart_bin_pred, data = acs)+
   labs(x = "Logistic regression probability", y = "BART probability")+
