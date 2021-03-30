@@ -27,7 +27,7 @@ library(DT)#datatable
 library(rmapshaper)
 
 cps <- read.csv("cps(clean).csv")#household level
-acs <- read.csv("acs(clean).csv")#aggregated (sums) to census tract
+acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
 cps_X <- cps %>% 
   dplyr::select("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
@@ -39,19 +39,7 @@ acs_X <- acs %>%
                 "employed", "married", "disability") %>%
   rename(hhsize = avg_hhsize)
 
-#read models
-reg_bin <- readRDS("reg_bin.RDS") #lasso logistic regression
-breg_bin <- readRDS("breg_bin.RDS") #BART logistic regression
-reg <- readRDS("reg.RDS") #lasso regression
-breg <- readRDS("breg.RDS") #BART regression
-
-#add predicted values
-acs$olr_bin_pred <- predict(reg_bin, acs_X, type = "response")
-acs$bart_bin_pred <- breg_bin$prob.test.mean
-
-acs$olr_pred <- predict(reg, acs_X, type = "response")
-acs$bart_pred <- breg$yhat.test.mean
-
+#for merging
 acs$GEOID <- as.character(paste0(acs$GEOID, substr(acs$X, 13, 13)))
 
 ia_shp <- block_groups(state = "IA") #this is block groups w/in tracts
@@ -61,12 +49,11 @@ county_list <- county_list[order(county_list)]
 all_counties <-   block_groups(state = 'IA', county = county_list)
 
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
-  rmapshaper::ms_simplify( keep = 0.05, keep_shapes = TRUE)
+  rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
 ```
 
 Predicting Presence of Food Insecurity
 ===================================== 
-
 
 Inputs {.sidebar}
 -----------------------------------------------------------------------
@@ -102,9 +89,7 @@ ggplot(aes(fill  = bart_bin_pred, colour=bart_bin_pred),data = ia_shp_join) +
 ### County-level
 ```{r, echo=FALSE}
 cnty_shp_join <- reactive({
-  subset(all_counties, COUNTYFP == input$county) %>%
-    left_join(acs, by="GEOID" )%>%
-    rmapshaper::ms_simplify( keep = 0.05, keep_shapes = TRUE)
+  subset(ia_shp_join, COUNTYFP == input$county) 
   #block_groups(state = 'IA', county = input$county)
   })
 
@@ -123,7 +108,7 @@ Row {data-height=150}
 ### Logistic Regression
 ```{r, echo=FALSE}
 
-ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = ia_shp_join) +
+ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nProbability")+
   scale_colour_viridis_c("Predicted \nProbability")
@@ -132,7 +117,7 @@ ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = ia_shp_join) +
 ### County-level
 
 ```{r, echo=FALSE}
-renderPlot({ggplot(aes(fill  = olr_bin_pred, colour=olr_bin_pred),data = cnty_shp_join()) +
+renderPlot({ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = cnty_shp_join()) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nProbability")+
   scale_colour_viridis_c("Predicted \nProbability")})
@@ -172,11 +157,10 @@ ggplot(aes(fill  = bart_pred, colour=bart_pred),data = ia_shp_join) +
 
 ### County-level
 ```{r,echo=FALSE}
-cnty_shp2 <- reactive({
-  subset(all_counties, COUNTYFP == input$county2)
-  #block_groups(state = 'IA', county = input$county)
+cnty_shp_join2 <- reactive({
+  subset(ia_shp_join, COUNTYFP == input$county2) 
   })
-cnty_shp_join2 <- reactive({left_join(cnty_shp2(), acs, by="GEOID" )})
+
 
 renderPlot({
 ggplot(aes(fill  = bart_pred, colour=bart_pred),data = cnty_shp_join2()) +
@@ -193,7 +177,7 @@ Row {data-height=150}
 ###  Regression
 ```{r,echo=FALSE}
 
-ggplot(aes(fill  = olr_pred, colour=olr_pred),data = ia_shp_join) +
+ggplot(aes(fill  = lasso_pred, colour=lasso_pred),data = ia_shp_join) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nExpenditure")+
   scale_colour_viridis_c("Predicted \nExpenditure")
@@ -202,7 +186,7 @@ ggplot(aes(fill  = olr_pred, colour=olr_pred),data = ia_shp_join) +
 ### County-level
 ```{r,echo=FALSE}
 renderPlot({
-ggplot(aes(fill  = olr_pred, colour=olr_pred),data = cnty_shp_join2()) +
+ggplot(aes(fill  = lasso_pred, colour=lasso_pred),data = cnty_shp_join2()) +
   geom_sf()+
   scale_fill_viridis_c("Predicted \nExpenditure")+
   scale_colour_viridis_c("Predicted \nExpenditure")})
@@ -214,7 +198,7 @@ Tabular output
 ===================================== 
 
 ```{r}
-datatable(data = acs[,c("X","olr_bin_pred", "bart_bin_pred", "olr_pred", "bart_pred")])
+datatable(data = acs[,c("X","lasso_bin_pred", "bart_bin_pred", "lasso_pred", "bart_pred")])
 ```
 
 

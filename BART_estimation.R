@@ -47,11 +47,12 @@ qplot(cps$fsecurity, geom = "histogram", binwidth = 1)
 #There are quite a few 0's in this data... try just predicting
 #whether or not household answered "Yes" at least once (binary)
 
+#----------BINARY FOOD INSECURITY MODELS -------
 # Estimate CPS model - binary presence of >0 "Yes" answer to food insecurity questions
 reg_bin <- glm(as.numeric(fsecurity != 0) ~ hhsize + female + kids + elderly + black + hispanic + education +
             employed + married + disability, data=cps[!is.na(cps$fsecurity),], family = binomial)
 #Lasso regression
-y <- cps[!is.na(cps$fsecurity), "fsecurity"] != 0
+y <- as.numeric(cps[!is.na(cps$fsecurity), "fsecurity"] != 0)
 x <- cps[!is.na(cps$fsecurity), c("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
                                 "employed", "married", "disability")] %>%as.matrix()
 
@@ -69,7 +70,7 @@ breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
               printevery=1000L,
               x.test = acs_X)
 
-
+#----------EXPENDITURE MODELS -------
 #Estimate CPS model - expenditure
 reg<- lm(fexpend ~ hhsize + female + kids + elderly + black + hispanic + education +
                  employed + married + disability, data=cps[!is.na(cps$fexpend),])
@@ -92,20 +93,22 @@ breg <- wbart(cps_X[!is.na(cps$fexpend),],
                   x.test = acs_X)
 
 ####PREDICTION ON ACS
-acs$lasso_bin_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso_bin)
+#predicted probabilities of any indicatin of food insecurity
+acs$lasso_bin_pred <- predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")
 acs$bart_bin_pred <- breg_bin$prob.test.mean
 
-acs$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso)
+#predicted mean expenditures
+acs$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso, type = "response")
 acs$bart_pred <- breg$yhat.test.mean
 
 
 #compare in-sample (cps) predicted values
-qplot(predict(reg_bin, type = "response"),breg_bin$prob.train.mean)+
-  labs(x = "Logistic regression probability", y = "BART probability")+
+qplot(lasso_bin_pred,bart_bin_pred, data = acs)+
+  labs(x = "Lasso logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
-qplot(predict(reg, type = "response"),breg$yhat.train.mean)+
-  labs(x = "OLR mean", y = "BART mean")+
+qplot(lasso_pred,bart_pred, data = acs)+
+  labs(x = "Lasso regression mean", y = "BART mean")+
   geom_abline(aes(intercept = 0, slope = 1))
 
 
@@ -125,7 +128,7 @@ ggplot() +
 
 #Other traits constant, the odds that a household with a disability experiences some level 
 #of food insecurity are
-exp(coef(reg_bin)['disability']) #over 4
+exp(coef(reg_bin)['disability']) #around four
 #times those of a household without a disability.
 #In the plot above, we can see that on average, no-disability homes have a probability of
 #approximately 6% while homes with a disability have a probability of approximately 15%. 
@@ -144,15 +147,18 @@ ggplot() +
 
 
 
-p1 <- qplot(olr_bin_pred,bart_bin_pred, data = acs)+
+p1 <- qplot(lasso_bin_pred,bart_bin_pred, data = acs)+
   labs(x = "Logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
-p2 <- qplot(olr_pred,bart_pred, data = acs)+
+p2 <- qplot(lasso_pred,bart_pred, data = acs)+
   labs(x = "OLR mean", y = "BART mean")+
   geom_abline(aes(intercept = 0, slope = 1))
 
 grid.arrange(p1,p2, nrow = 1)
+
+
+write.csv(acs, "acs_predictions.csv")
 
 ##### MAPPING
 #maybe:
