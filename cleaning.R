@@ -51,7 +51,7 @@ cps <- read.csv("cps(raw).csv")
 cps <- cps[cps$STATEFIP==19,]
 cps <- cps[, c("CPSID", "PERNUM", "FSRAWSCRA","FSTOTXPNC", "AGE", "SEX",  "FAMSIZE", "RACE", 
     "HISPAN", "EDUC", "EMPSTAT","MARST", "DIFFHEAR", "DIFFEYE", "DIFFREM", "DIFFPHYS", 
-    "DIFFMOB", "DIFFCARE")]
+    "DIFFMOB", "DIFFCARE", "HWTFINL")]
 cps$SEX <- cps$SEX - 1    # Create dummy variables
 cps$CHILD <- ifelse(cps$AGE < 18, 1, 0)
 cps$ELDERLY <- ifelse(cps$AGE > 64, 1, 0)
@@ -67,7 +67,7 @@ cps <- merge(
       by = list(id=cps$CPSID), mean),
   aggregate(list(female=cps$SEX, kids=cps$CHILD, elderly=cps$ELDERLY, black=cps$BLACK, 
       hispanic=cps$HISPANIC, education=cps$EDUC, employed=cps$EMP,
-      married=cps$MARRIED, disability=cps$DIFF), by = list(id=cps$CPSID), sum))
+      married=cps$MARRIED, disability=cps$DIFF,weight = cps$HWTFINL), by = list(id=cps$CPSID), sum))
 cps$disability <- ifelse(cps$disability>0, 1, 0)  # Recode to dummy variable
 cps$fsecurity[cps$fsecurity==98] <- NA   # Clean up missing values
 cps$fsecurity[cps$fsecurity==99] <- NA

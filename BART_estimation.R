@@ -102,18 +102,6 @@ acs$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso, typ
 acs$bart_pred <- breg$yhat.test.mean
 
 
-#compare in-sample (cps) predicted values
-qplot(lasso_bin_pred,bart_bin_pred, data = acs)+
-  labs(x = "Lasso logistic regression probability", y = "BART probability")+
-  geom_abline(aes(intercept = 0, slope = 1))
-
-qplot(lasso_pred,bart_pred, data = acs)+
-  labs(x = "Lasso regression mean", y = "BART mean")+
-  geom_abline(aes(intercept = 0, slope = 1))
-
-
-
-
 
 #effects of x variables on predicted probability
 ggplot() +
@@ -146,13 +134,13 @@ ggplot() +
 
 
 
-
+#compare out of sample predicted values
 p1 <- qplot(lasso_bin_pred,bart_bin_pred, data = acs)+
-  labs(x = "Logistic regression probability", y = "BART probability")+
+  labs(x = "Lasso logistic regression probability", y = "BART probability")+
   geom_abline(aes(intercept = 0, slope = 1))
 
 p2 <- qplot(lasso_pred,bart_pred, data = acs)+
-  labs(x = "OLR mean", y = "BART mean")+
+  labs(x = "Lasso regression mean", y = "BART mean")+
   geom_abline(aes(intercept = 0, slope = 1))
 
 grid.arrange(p1,p2, nrow = 1)
