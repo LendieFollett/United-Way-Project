@@ -56,10 +56,17 @@ y <- as.numeric(cps[!is.na(cps$fsecurity), "fsecurity"] != 0)
 x <- cps[!is.na(cps$fsecurity), c("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
                                 "employed", "married", "disability")] %>%as.matrix()
 
-lasso_bin <- cv.glmnet(x, y,alpha = 1,family = "binomial") #alpha = 1 --> lasso, alpha = 0 --> ridge
+lasso_bin <- cv.glmnet(x, y,alpha = 1,family = "binomial", weights = cps$weight[!is.na(cps$fsecurity)]) #alpha = 1 --> lasso, alpha = 0 --> ridge
 lasso_cv_bin  <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
 plot(lasso_cv_bin)
 optimal_lambda_lasso_bin <- lasso_cv_bin$lambda.min
+
+lasso_bin_noweight <- cv.glmnet(x, y,alpha = 1,family = "binomial") #alpha = 1 --> lasso, alpha = 0 --> ridge
+lasso_cv_bin_noweight  <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
+optimal_lambda_lasso_bin_noweight <- lasso_cv_bin_noweight$lambda.min
+qplot(predict(lasso_bin_noweight, as.matrix(acs_X), s = optimal_lambda_lasso_bin_noweight, type = "response"),
+      predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")) +
+  labs(x = "No weight predictions", y = "Weight predictions")
 
 
 breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
@@ -79,10 +86,12 @@ y <- cps[!is.na(cps$fexpend), "fexpend"]
 x <- cps[!is.na(cps$fexpend), c("hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
            "employed", "married", "disability")] %>%as.matrix()
 
-lasso <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
+lasso <- cv.glmnet(x, y,alpha = 1, weights = cps$weight[!is.na(cps$fexpend)]) #alpha = 1 --> lasso, alpha = 0 --> ridge
 lasso_cv <- cv.glmnet(x, y,alpha = 1) #alpha = 1 --> lasso, alpha = 0 --> ridge
 plot(lasso_cv)
 optimal_lambda_lasso <- lasso_cv$lambda.min
+#"weights is for the observation weights. Default is 1 for each observation. 
+#(Note: glmnet rescales the weights to sum to N, the sample size."
 
 breg <- wbart(cps_X[!is.na(cps$fexpend),],
               cps$fexpend[!is.na(cps$fexpend)], #predicting presence of food insecurity
@@ -93,7 +102,7 @@ breg <- wbart(cps_X[!is.na(cps$fexpend),],
                   x.test = acs_X)
 
 ####PREDICTION ON ACS
-#predicted probabilities of any indicatin of food insecurity
+#predicted probabilities of any indication of food insecurity
 acs$lasso_bin_pred <- predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")
 acs$bart_bin_pred <- breg_bin$prob.test.mean
 
