@@ -1,8 +1,8 @@
 ---
 title: "United Way Food Insecurity Predictions"
+runtime: shiny
 output: 
   flexdashboard::flex_dashboard:
-    runtime: shiny
     orientation: row
     vertical_layout: scroll
 ---

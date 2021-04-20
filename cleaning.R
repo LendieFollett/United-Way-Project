@@ -74,3 +74,4 @@ cps$fsecurity[cps$fsecurity==99] <- NA
 cps$fexpend[cps$fexpend==999] <- NA
 cps$fexpend <- cps$fexpend/cps$hhsize  # In per person terms
 write.csv(cps, "cps(clean).csv")
+
