@@ -53,7 +53,7 @@ Inputs {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r, echo=FALSE}
-selectInput("county", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP))
+selectInput("county", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP), selected = "111")
 
 ```
 
@@ -63,7 +63,7 @@ Row
 
 ### Introduction
 
-Predictions are based on a logistic regression predicting the probability of a household experiencing some level of food insecurity. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. 
+Predictions are based on a logistic regression predicting the probability of a household experiencing some level of food insecurity. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. Survey sampling weights are used to decrease prediction bias. 
 
 
 Row 
@@ -101,9 +101,9 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("X", "female", "avg_hhsize", "hispanic",
+temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("X","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
-                                  "married", "disability", "lasso_bin_pred"))%>%
+                                  "married", "disability"))%>%
                   rename(Location = X, 
                          `Predicted Probability` = lasso_bin_pred)
 renderDataTable({
@@ -122,7 +122,7 @@ Inputs {.sidebar}
 
 
 ```{r, echo=FALSE}
-selectInput("county2", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP))
+selectInput("county2", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP), selected = "111")
 
 ```
 
@@ -131,7 +131,7 @@ Row
 
 ### Introduction
 
-Predictions are based on a linear regression predicting the mean household food expenditure. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. 
+Predictions are based on a linear regression predicting the mean household food expenditure. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. Survey sampling weights are used to decrease prediction bias.  
 
 
 Row 
@@ -165,9 +165,9 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("X", "female", "avg_hhsize", "hispanic",
+temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("X", "lasso_pred","female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
-                                  "married", "disability", "lasso_pred"))%>%
+                                  "married", "disability"))%>%
                   rename(Location = X, 
                          `Predicted Expenditure` = lasso_pred)
 renderDataTable({
