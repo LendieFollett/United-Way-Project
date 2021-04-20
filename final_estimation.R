@@ -65,14 +65,21 @@ lasso_coef<- coef(lasso_cv, s = "lambda.min")
 
 
 #----------PREDICTION ON ACS--------
+#save into csv for dashboard
+acs_predictions <- acs %>%
+  mutate_at(c("female", "kids", "elderly", "black", "hispanic", "education",
+              "employed", "married", "disability"), ~ . /  households) %>%
+  mutate_at(c("female", "kids", "elderly", "black", "hispanic", "education",
+              "employed", "married", "disability"), round, 2) %>%
+  dplyr::select("X","GEOID","avg_hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
+                "employed", "married", "disability") 
 #predicted probabilities of any indication of food insecurity
-acs$lasso_bin_pred <- predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")
+acs_predictions$lasso_bin_pred <- predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")
 
 #predicted mean expenditures
-acs$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso, type = "response")
+acs_predictions$lasso_pred <- predict(lasso, as.matrix(acs_X), s = optimal_lambda_lasso, type = "response")
 
-#save into csv for dashboard
-write.csv(acs, "acs_predictions.csv")
+write.csv(acs_predictions, "acs_predictions.csv", row.names=FALSE)
 
 #----------EFFECTS OF DEMOGRAPHIC TRAITS--------
 

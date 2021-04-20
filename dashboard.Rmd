@@ -3,6 +3,7 @@ title: "United Way Food Insecurity Predictions"
 output: 
   flexdashboard::flex_dashboard:
     runtime: shiny
+    orientation: row
     vertical_layout: scroll
 ---
 
@@ -26,12 +27,6 @@ library(rmapshaper)
 
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
-acs_X <- acs %>%
-  mutate_at(c("female", "kids", "elderly", "black", "hispanic", "education",
-              "employed", "married", "disability"), ~ . /  households) %>%
-  dplyr::select("avg_hhsize", "female", "kids", "elderly", "black", "hispanic", "education",
-                "employed", "married", "disability") %>%
-  rename(hhsize = avg_hhsize)
 
 #for merging
 acs$GEOID <- as.character(paste0(acs$GEOID, substr(acs$X, 13, 13)))
@@ -44,21 +39,26 @@ all_counties <-   block_groups(state = 'IA', county = county_list)
 
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
   rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
+
+#for color scale
+limit <- c(min(acs$lasso_pred,na.rm=TRUE), max(acs$lasso_pred,na.rm=TRUE))
+limit_bin <- c(min(acs$lasso_bin_pred,na.rm=TRUE), max(acs$lasso_bin_pred,na.rm=TRUE))
+
 ```
 
-Predicting Presence of Food Insecurity
+Presence of Food Insecurity
 ===================================== 
 
 Inputs {.sidebar}
 -----------------------------------------------------------------------
 
-
 ```{r, echo=FALSE}
-selectInput("county", label = "Select County:", choices = unique(all_counties$COUNTYFP))
+selectInput("county", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP))
 
 ```
 
-Row {data-height=150}
+
+Row 
 -----------------------------------------------------------------------
 
 ### Introduction
@@ -66,8 +66,9 @@ Row {data-height=150}
 Predictions are based on a logistic regression predicting the probability of a household experiencing some level of food insecurity. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. 
 
 
-Row {data-height=150}
+Row 
 -----------------------------------------------------------------------
+
 
 ### State-level
 ```{r, echo=FALSE}
@@ -79,8 +80,8 @@ cnty_shp_join <- reactive({
 
 ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")
+  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
+  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)
 ```
 
 ### County-level
@@ -88,25 +89,26 @@ ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
 ```{r, echo=FALSE}
 renderPlot({ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = cnty_shp_join()) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability")+
-  scale_colour_viridis_c("Predicted \nProbability")})
+  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
+  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)})
 
 ```
 
-Row {data-height=150}
+
+Row 
 -----------------------------------------------------------------------
 
 ### Predictions
 
 ```{r, echo=FALSE}
-temp <- ia_shp_join %>% dplyr::select(c("X", "population", "female", "avg_hhsize", "hispanic",
+temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("X", "female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
-                                  "married", "disability", "households", "lasso_bin_pred"))%>%
+                                  "married", "disability", "lasso_bin_pred"))%>%
                   rename(Location = X, 
                          `Predicted Probability` = lasso_bin_pred)
 renderDataTable({
-rbind(temp[which(ia_shp_join$COUNTYFP == input$county),],
-      temp[which(ia_shp_join$COUNTYFP != input$county),])
+rbind(temp1[which(ia_shp_join$COUNTYFP == input$county),],
+      temp1[which(ia_shp_join$COUNTYFP != input$county),])
   
 })
 ```
@@ -120,31 +122,28 @@ Inputs {.sidebar}
 
 
 ```{r, echo=FALSE}
-selectInput("county2", label = "Select County:", choices = unique(all_counties$COUNTYFP))
+selectInput("county2", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP))
 
 ```
 
-Row {data-height=150}
+Row 
 -----------------------------------------------------------------------
 
 ### Introduction
 
 Predictions are based on a linear regression predicting the mean household food expenditure. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. 
-
-
-
-Row {data-height=150}
+Row 
 -----------------------------------------------------------------------
 
-###  Regression
+###  State-level
 ```{r,echo=FALSE}
 cnty_shp_join2 <- reactive({
   subset(ia_shp_join, COUNTYFP == input$county2) 
   })
 ggplot(aes(fill  = lasso_pred, colour=lasso_pred),data = ia_shp_join) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nExpenditure")+
-  scale_colour_viridis_c("Predicted \nExpenditure")
+  scale_fill_viridis_c("Predicted \nExpenditure",limits = limit)+
+  scale_colour_viridis_c("Predicted \nExpenditure",limits = limit)
 ```
 
 ### County-level
@@ -152,26 +151,26 @@ ggplot(aes(fill  = lasso_pred, colour=lasso_pred),data = ia_shp_join) +
 renderPlot({
 ggplot(aes(fill  = lasso_pred, colour=lasso_pred),data = cnty_shp_join2()) +
   geom_sf()+
-  scale_fill_viridis_c("Predicted \nExpenditure")+
-  scale_colour_viridis_c("Predicted \nExpenditure")})
+  scale_fill_viridis_c("Predicted \nExpenditure",limits = limit)+
+  scale_colour_viridis_c("Predicted \nExpenditure",limits = limit)})
 
 ```
 
 
-Row {data-height=150}
+Row 
 -----------------------------------------------------------------------
 
 ### Predictions
 
 ```{r, echo=FALSE}
-temp <- ia_shp_join %>% dplyr::select(c("X", "population", "female", "avg_hhsize", "hispanic",
+temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("X", "female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
-                                  "married", "disability", "households", "lasso_pred"))%>%
+                                  "married", "disability", "lasso_pred"))%>%
                   rename(Location = X, 
                          `Predicted Expenditure` = lasso_pred)
 renderDataTable({
-rbind(temp[which(ia_shp_join$COUNTYFP == input$county2),],
-      temp[which(ia_shp_join$COUNTYFP != input$county2),])
+rbind(temp2[which(ia_shp_join$COUNTYFP == input$county2),],
+      temp2[which(ia_shp_join$COUNTYFP != input$county2),])
   
 })
 ```
