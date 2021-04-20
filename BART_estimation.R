@@ -77,6 +77,12 @@ breg_bin <- pbart(cps_X[!is.na(cps$fsecurity),],
               printevery=1000L,
               x.test = acs_X)
 
+qplot(breg_bin$prob.test.mean,
+      predict(lasso_bin, as.matrix(acs_X), s = optimal_lambda_lasso_bin, type = "response")) +
+  labs(x = "BART", y = "Weight predictions")
+
+
+
 #----------EXPENDITURE MODELS -------
 #Estimate CPS model - expenditure
 reg<- lm(fexpend ~ hhsize + female + kids + elderly + black + hispanic + education +
@@ -93,6 +99,13 @@ optimal_lambda_lasso <- lasso_cv$lambda.min
 #"weights is for the observation weights. Default is 1 for each observation. 
 #(Note: glmnet rescales the weights to sum to N, the sample size."
 
+res <- y - predict(lasso, as.matrix(x), s = optimal_lambda_lasso, type = "response")
+
+i <- 1
+qplot(x[,i], res, alpha = I(.5), geom = "jitter", group = x[,i])
+
+
+
 breg <- wbart(cps_X[!is.na(cps$fexpend),],
               cps$fexpend[!is.na(cps$fexpend)], #predicting presence of food insecurity
                   nskip=5000,
@@ -100,6 +113,14 @@ breg <- wbart(cps_X[!is.na(cps$fexpend),],
                   ndpost=5000,
                   printevery=1000L,
                   x.test = acs_X)
+
+res <- y - breg$yhat.train.mean
+
+i <- 1
+i = i + 1
+qplot(x[,i], res, alpha = I(.5), geom = "jitter", group = x[,i])
+
+
 
 ####PREDICTION ON ACS
 #predicted probabilities of any indication of food insecurity
