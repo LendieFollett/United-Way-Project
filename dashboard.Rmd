@@ -132,6 +132,8 @@ Row
 ### Introduction
 
 Predictions are based on a linear regression predicting the mean household food expenditure. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. 
+
+
 Row 
 -----------------------------------------------------------------------
 
