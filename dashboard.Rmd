@@ -25,6 +25,7 @@ library(DT)#datatable
 library(rmapshaper)
 library(leaflet)
 library(htmltools)
+library(totalcensus)
 
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
@@ -41,9 +42,11 @@ all_counties <-   block_groups(state = 'IA', county = county_list) #also time in
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
   rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
 
+ia_shp_join$COUNTYNAME <- convert_fips_to_names(ia_shp_join$COUNTYFP, states = rep("IA", nrow(ia_shp_join)), geo_header="COUNTY")
+
 ia_shp_join$labels <- paste0(
   "<strong> County: </strong> ",
-  ia_shp_join$COUNTYFP, "<br/> ",
+  ia_shp_join$COUNTYNAME, "<br/> ",
   "<strong> Food Expenditure: </strong> ",
   ia_shp_join$lasso_pred, "<br/> ",
   "<strong> Food Insecurity: </strong> ",
@@ -74,7 +77,7 @@ Inputs {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r, echo=FALSE}
-selectInput("county", label = "Select County FIPS:", choices = unique(all_counties$COUNTYFP), selected = "111")
+selectInput("county", label = "Select County:", choices = unique(ia_shp_join$COUNTYNAME), selected = "Polk County")
 
 ```
 
@@ -94,7 +97,7 @@ Row
 ### State-level
 ```{r, echo=FALSE}
 cnty_shp_join <- reactive({
-  subset(ia_shp_join, COUNTYFP == input$county) 
+  subset(ia_shp_join, COUNTYNAME == input$county) 
   #block_groups(state = 'IA', county = input$county)
   })
 
