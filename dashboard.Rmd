@@ -145,7 +145,7 @@ leaflet(cnty_shp_join(),height=500, width=1000) %>%
     )
   )%>%
   leaflet::addLegend(
-    pal = pal, values = ~lasso_bin_pred,
+    pal = pal_bin, values = ~lasso_bin_pred,
     opacity = 0.7, title = "Predicted \nProbability",
     position = "topright"
   )
