@@ -24,6 +24,7 @@ library(rgeos)#spatial
 library(DT)#datatable
 library(rmapshaper)
 library(leaflet)
+library(htmltools)
 
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
@@ -40,6 +41,16 @@ all_counties <-   block_groups(state = 'IA', county = county_list) #also time in
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
   rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
 
+ia_shp_join$labels <- paste0(
+  "<strong> County: </strong> ",
+  ia_shp_join$COUNTYFP, "<br/> ",
+  "<strong> Food Expenditure: </strong> ",
+  ia_shp_join$lasso_pred, "<br/> ",
+  "<strong> Food Insecurity: </strong> ",
+  ia_shp_join$lasso_bin_pred, "<br/> "
+) %>%
+  lapply(htmltools::HTML)
+
 #for color scale
 limit <- c(min(acs$lasso_pred,na.rm=TRUE), max(acs$lasso_pred,na.rm=TRUE))
 limit_bin <- c(min(acs$lasso_bin_pred,na.rm=TRUE), max(acs$lasso_bin_pred,na.rm=TRUE))
@@ -51,7 +62,7 @@ pal_bin <- colorBin(
 
 pal <- colorBin(
   palette = "viridis", domain = ia_shp_join$lasso_pred,
-  bins = seq(min(ia_shp_join$lasso_pred, na.rm = TRUE), max(ia_shp_join$lasso_pred, na.rm = TRUE) + .1, by = 1)
+  bins = seq(floor(min(ia_shp_join$lasso_pred, na.rm = TRUE)), floor(max(ia_shp_join$lasso_pred, na.rm = TRUE)) + .1, by = 5)
 )
 
 ```
@@ -92,7 +103,7 @@ cnty_shp_join <- reactive({
 #  geom_sf()+
 #  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
 #  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)
-
+renderLeaflet({
 leaflet(ia_shp_join,height=500, width=1000) %>%
   addTiles() %>%
   #setView(lng = 0, lat = 30, zoom = 2) %>%
@@ -100,12 +111,12 @@ leaflet(ia_shp_join,height=500, width=1000) %>%
     fillColor = ~ pal_bin(lasso_bin_pred),
     color = "white",
     fillOpacity = 0.6,
-    #label = ~labels,
+    label = ~labels,
     highlight = highlightOptions(
       color = "black",
       bringToFront = TRUE
-    )
-  )
+    ))
+})
 ```
 
 ### County-level
@@ -124,11 +135,16 @@ leaflet(cnty_shp_join(),height=500, width=1000) %>%
     fillColor = ~ pal_bin(lasso_bin_pred),
     color = "white",
     fillOpacity = 0.6,
-    #label = ~labels,
+    label = ~labels,
     highlight = highlightOptions(
       color = "black",
       bringToFront = TRUE
     )
+  )%>%
+  leaflet::addLegend(
+    pal = pal, values = ~lasso_bin_pred,
+    opacity = 0.7, title = "Predicted \nProbability",
+    position = "topright"
   )
 })
 
