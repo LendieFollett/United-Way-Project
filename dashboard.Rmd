@@ -35,7 +35,7 @@ ia_shp <- readRDS("ia_shp.RDS")#block_groups(state = "IA")  #TIME INTENSIVE 1st 
 
 county_list <- readRDS("county_list.RDS")#unique(counties("Iowa")$NAME)#TIME INTENSIVE 1st run (so each dashboard run)
 county_list <- county_list[order(county_list)]
-all_counties <-   block_groups(state = 'IA', county = county_list)
+all_counties <-   block_groups(state = 'IA', county = county_list) #also time intensive...
 
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
   rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
