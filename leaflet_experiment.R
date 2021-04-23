@@ -9,7 +9,7 @@ leaflet(ia_shp_join) %>%
   addPolygons(
     fillColor = ~ pal(lasso_bin_pred),
     color = "white",
-    fillOpacity = 0.7,
+    fillOpacity = 0.6,
     #label = ~labels,
     highlight = highlightOptions(
       color = "black",
