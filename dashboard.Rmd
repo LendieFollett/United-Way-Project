@@ -199,10 +199,10 @@ Row
 ###  State-level
 ```{r,echo=FALSE}
 cnty_shp_join2 <- reactive({
-  subset(ia_shp_join, COUNTYFP == input$county2) 
+  subset(ia_shp_join, COUNTYNAME == input$county2) 
   })
 renderLeaflet({
-leaflet(ia_shp_join2,height=500, width=1000) %>%
+leaflet(ia_shp_join,height=500, width=1000) %>%
   addTiles() %>%
   #setView(lng = 0, lat = 30, zoom = 2) %>%
   addPolygons(
