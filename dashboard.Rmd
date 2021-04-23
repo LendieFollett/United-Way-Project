@@ -168,8 +168,8 @@ temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("X","lasso_bin_pred", "
                   rename(Location = X, 
                          `Predicted Probability` = lasso_bin_pred)
 renderDataTable({
-rbind(temp1[which(ia_shp_join$COUNTYFP == input$county),],
-      temp1[which(ia_shp_join$COUNTYFP != input$county),])
+rbind(temp1[which(ia_shp_join$COUNTYNAME == input$county),],
+      temp1[which(ia_shp_join$COUNTYNAME != input$county),])
   
 })
 ```
@@ -258,8 +258,8 @@ temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("X", "lasso_pred","fema
                   rename(Location = X, 
                          `Predicted Expenditure` = lasso_pred)
 renderDataTable({
-rbind(temp2[which(ia_shp_join$COUNTYFP == input$county2),],
-      temp2[which(ia_shp_join$COUNTYFP != input$county2),])
+rbind(temp2[which(ia_shp_join$COUNTYNAME == input$county2),],
+      temp2[which(ia_shp_join$COUNTYNAME != input$county2),])
   
 })
 ```
