@@ -26,9 +26,14 @@ all_counties <-   block_groups(state = 'IA', county = county_list) #also time in
 ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
   rmapshaper::ms_simplify( keep = 0.01, keep_shapes = TRUE)
 
-pal <- colorBin(
+pal_bin <- colorBin(
   palette = "viridis", domain = ia_shp_join$lasso_bin_pred,
   bins = seq(0, max(ia_shp_join$lasso_bin_pred, na.rm = TRUE) + .01, by = .1)
+)
+
+pal <- colorBin(
+  palette = "viridis", domain = ia_shp_join$lasso_pred,
+  bins = seq(min(ia_shp_join$lasso_pred, na.rm = TRUE), max(ia_shp_join$lasso_pred, na.rm = TRUE) + .1, by = 1)
 )
 leaflet(ia_shp_join) %>%
   addTiles() %>%

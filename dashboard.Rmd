@@ -23,7 +23,7 @@ library(tidycensus)
 library(rgeos)#spatial
 library(DT)#datatable
 library(rmapshaper)
-
+library(leaflet)
 
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
@@ -43,6 +43,16 @@ ia_shp_join <- left_join(ia_shp, acs, by="GEOID" ) %>%
 #for color scale
 limit <- c(min(acs$lasso_pred,na.rm=TRUE), max(acs$lasso_pred,na.rm=TRUE))
 limit_bin <- c(min(acs$lasso_bin_pred,na.rm=TRUE), max(acs$lasso_bin_pred,na.rm=TRUE))
+
+pal_bin <- colorBin(
+  palette = "viridis", domain = ia_shp_join$lasso_bin_pred,
+  bins = seq(0, max(ia_shp_join$lasso_bin_pred, na.rm = TRUE) + .01, by = .05)
+)
+
+pal <- colorBin(
+  palette = "viridis", domain = ia_shp_join$lasso_pred,
+  bins = seq(min(ia_shp_join$lasso_pred, na.rm = TRUE), max(ia_shp_join$lasso_pred, na.rm = TRUE) + .1, by = 1)
+)
 
 ```
 
@@ -78,19 +88,49 @@ cnty_shp_join <- reactive({
   })
 
 
-ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
-  geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
-  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)
+#ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
+#  geom_sf()+
+#  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
+#  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)
+
+leaflet(ia_shp_join,height=500, width=1000) %>%
+  addTiles() %>%
+  #setView(lng = 0, lat = 30, zoom = 2) %>%
+  addPolygons(
+    fillColor = ~ pal_bin(lasso_bin_pred),
+    color = "white",
+    fillOpacity = 0.6,
+    #label = ~labels,
+    highlight = highlightOptions(
+      color = "black",
+      bringToFront = TRUE
+    )
+  )
 ```
 
 ### County-level
 
 ```{r, echo=FALSE}
-renderPlot({ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = cnty_shp_join()) +
-  geom_sf()+
-  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
-  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)})
+# renderPlot({ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = cnty_shp_join()) +
+#   geom_sf()+
+#   scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
+#   scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)})
+
+renderLeaflet({
+leaflet(cnty_shp_join(),height=500, width=1000) %>%
+  addTiles() %>%
+  #setView(lng = 0, lat = 30, zoom = 2) %>%
+  addPolygons(
+    fillColor = ~ pal_bin(lasso_bin_pred),
+    color = "white",
+    fillOpacity = 0.6,
+    #label = ~labels,
+    highlight = highlightOptions(
+      color = "black",
+      bringToFront = TRUE
+    )
+  )
+})
 
 ```
 
