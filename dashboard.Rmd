@@ -47,6 +47,8 @@ ia_shp_join$COUNTYNAME <- convert_fips_to_names(ia_shp_join$COUNTYFP, states = r
 ia_shp_join$labels <- paste0(
   "<strong> County: </strong> ",
   ia_shp_join$COUNTYNAME, "<br/> ",
+  "<strong> GEOID: </strong> ",
+  ia_shp_join$GEOID, "<br/> ",
   "<strong> Food Expenditure: </strong> ",
   ia_shp_join$lasso_pred, "<br/> ",
   "<strong> Food Insecurity: </strong> ",
