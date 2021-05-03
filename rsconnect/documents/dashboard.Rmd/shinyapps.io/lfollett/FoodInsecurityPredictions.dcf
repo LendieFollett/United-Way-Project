@@ -5,9 +5,9 @@ account: lfollett
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4072003
-bundleId: 4552611
+bundleId: 4552723
 url: https://lfollett.shinyapps.io/FoodInsecurityPredictions/
-when: 1620076572.20058
+when: 1620078990.52298
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: _site.yml|.RData|acs(clean).csv|BART_estimation.R|cleaning.R|cps(clean).csv|cps(raw).csv|Documentation.pdf|estimation.R|final_estimation.R|index.Rmd|leaflet_experiment.R|README.md

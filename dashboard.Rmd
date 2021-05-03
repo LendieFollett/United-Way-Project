@@ -151,7 +151,7 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("GEOID","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
+temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("GEOID","COUNTYNAME","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
                                   "married", "disability"))%>%
                   rename( 
@@ -225,7 +225,7 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("GEOID", "lasso_pred","female", "avg_hhsize", "hispanic",
+temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("GEOID","COUNTYNAME", "lasso_pred","female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
                                   "married", "disability"))%>%
                   rename(
