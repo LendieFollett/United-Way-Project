@@ -77,6 +77,7 @@ pal_bin <- colorBin(
 
 pal <- colorBin(
   palette = "YlOrRd", domain = ia_shp_join$lasso_pred,
+  reverse=TRUE,
   bins = seq(floor(min(ia_shp_join$lasso_pred, na.rm = TRUE)), floor(max(ia_shp_join$lasso_pred, na.rm = TRUE)) + .1, by = 5)
 )
 
