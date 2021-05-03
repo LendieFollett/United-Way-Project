@@ -104,7 +104,8 @@ Row
 
 ### Introduction
 
-Predictions are based on a logistic regression predicting the probability of a household experiencing some level of food insecurity. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. Survey sampling weights are used to decrease prediction bias. 
+The estimates refer to the proportion of food insecure households in each block group. The predictions are made in two stages. First, we use Current Population Survey data to estimate the probability that a given household is food insecure in at least one dimension in the past year. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain the predicted proportion of food insecure households in each block group.
+
 
 
 Row 
@@ -185,7 +186,7 @@ Row
 
 ### Introduction
 
-Predictions are based on a linear regression predicting the mean household food expenditure. The LASSO technique is used to select demographic variables that improve out of sample prediction performance. Survey sampling weights are used to decrease prediction bias.  
+The estimates refer to weekly average food expenditure per person. The predictions are made in two stages. First, we use Current Population Survey data to estimate weekly food expenditure per person at the household level. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain average food expenditure per person in each block group.
 
 
 Row 
