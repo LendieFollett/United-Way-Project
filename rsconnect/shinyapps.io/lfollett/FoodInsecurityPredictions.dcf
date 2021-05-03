@@ -1,0 +1,13 @@
+name: FoodInsecurityPredictions
+title:
+username:
+account: lfollett
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4072003
+bundleId: 4552278
+url: https://lfollett.shinyapps.io/FoodInsecurityPredictions/
+when: 1620070580.44957
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|BART_estimation.R|cleaning.R|Documentation.pdf|estimation.R|final_estimation.R|index.Rmd|leaflet_experiment.R

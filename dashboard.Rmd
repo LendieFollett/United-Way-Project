@@ -10,6 +10,17 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+#Xremove state-level maps
+#Xround hover output
+#Xround predicted probability in table output
+#definition of expenditure in the intro page 
+#Xmake neighborhood dividers less prominent (white dividers less thick)
+#Xcolor to rocket instead of viridis
+#consistent color --> goodness color mapping
+#(reverse it for the probability scale)
+#Probability of being food SECURE
+#Xhave GEOID in the table so can look up map locations in table
+
 #Incorporating Shiny (interactive) components into flexdashboard:
 #https://rmarkdown.rstudio.com/flexdashboard/shiny.html#simple_example
 library(flexdashboard)
@@ -29,9 +40,13 @@ library(totalcensus)
 
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
+#round predictions
+acs$lasso_bin_pred <- round(acs$lasso_bin_pred,2)
+acs$lasso_pred <- round(acs$lasso_pred,2)
 
 #for merging
 acs$GEOID <- as.character(paste0(acs$GEOID, substr(acs$X, 13, 13)))
+
 #this is block groups w/in tracts
 ia_shp <- readRDS("ia_shp.RDS")#block_groups(state = "IA")  #TIME INTENSIVE 1st run (so each dashboard run)
 
@@ -49,7 +64,7 @@ ia_shp_join$labels <- paste0(
   ia_shp_join$COUNTYNAME, "<br/> ",
   "<strong> GEOID: </strong> ",
   ia_shp_join$GEOID, "<br/> ",
-  "<strong> Food Expenditure: </strong> ",
+  "<strong> Food Expenditure: </strong> $",
   ia_shp_join$lasso_pred, "<br/> ",
   "<strong> Food Insecurity: </strong> ",
   ia_shp_join$lasso_bin_pred, "<br/> "
@@ -61,12 +76,12 @@ limit <- c(min(acs$lasso_pred,na.rm=TRUE), max(acs$lasso_pred,na.rm=TRUE))
 limit_bin <- c(min(acs$lasso_bin_pred,na.rm=TRUE), max(acs$lasso_bin_pred,na.rm=TRUE))
 
 pal_bin <- colorBin(
-  palette = "viridis", domain = ia_shp_join$lasso_bin_pred,
+  palette = "YlOrRd", domain = ia_shp_join$lasso_bin_pred,
   bins = seq(0, max(ia_shp_join$lasso_bin_pred, na.rm = TRUE) + .01, by = .05)
 )
 
 pal <- colorBin(
-  palette = "viridis", domain = ia_shp_join$lasso_pred,
+  palette = "YlOrRd", domain = ia_shp_join$lasso_pred,
   bins = seq(floor(min(ia_shp_join$lasso_pred, na.rm = TRUE)), floor(max(ia_shp_join$lasso_pred, na.rm = TRUE)) + .1, by = 5)
 )
 
@@ -96,39 +111,6 @@ Row
 -----------------------------------------------------------------------
 
 
-### State-level
-```{r, echo=FALSE}
-cnty_shp_join <- reactive({
-  subset(ia_shp_join, COUNTYNAME == input$county) 
-  #block_groups(state = 'IA', county = input$county)
-  })
-
-
-#ggplot(aes(fill  = lasso_bin_pred, colour=lasso_bin_pred),data = ia_shp_join) +
-#  geom_sf()+
-#  scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
-#  scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)
-renderLeaflet({
-leaflet(ia_shp_join,height=500, width=1000) %>%
-  addTiles() %>%
-  #setView(lng = 0, lat = 30, zoom = 2) %>%
-  addPolygons(
-    fillColor = ~ pal_bin(lasso_bin_pred),
-    color = "white",
-    fillOpacity = 0.6,
-    label = ~labels,
-    highlight = highlightOptions(
-      color = "black",
-      bringToFront = TRUE
-    ))%>%
-  leaflet::addLegend(
-    pal = pal_bin, values = ~lasso_bin_pred,
-    opacity = 0.7, title = "Predicted \nProbability",
-    position = "topright"
-  )
-})
-```
-
 ### County-level
 
 ```{r, echo=FALSE}
@@ -137,6 +119,11 @@ leaflet(ia_shp_join,height=500, width=1000) %>%
 #   scale_fill_viridis_c("Predicted \nProbability",limits = limit_bin)+
 #   scale_colour_viridis_c("Predicted \nProbability",limits = limit_bin)})
 
+
+cnty_shp_join <- reactive({
+  subset(ia_shp_join, COUNTYNAME == input$county) 
+  #block_groups(state = 'IA', county = input$county)
+  })
 renderLeaflet({
 leaflet(cnty_shp_join(),height=500, width=1000) %>%
   addTiles() %>%
@@ -144,12 +131,18 @@ leaflet(cnty_shp_join(),height=500, width=1000) %>%
   addPolygons(
     fillColor = ~ pal_bin(lasso_bin_pred),
     color = "white",
+        stroke=FALSE,
     fillOpacity = 0.6,
     label = ~labels,
     highlight = highlightOptions(
       color = "black",
       bringToFront = TRUE
     )
+  )%>%
+  leaflet::addLegend(
+    pal = pal_bin, values = ~lasso_bin_pred,
+    opacity = 0.7, title = "Predicted \nProbability",
+    position = "topright"
   )
 })
 
@@ -162,10 +155,10 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("X","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
+temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("GEOID","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
                                   "married", "disability"))%>%
-                  rename(Location = X, 
+                  rename( 
                          `Predicted Probability` = lasso_bin_pred)
 renderDataTable({
 rbind(temp1[which(ia_shp_join$COUNTYNAME == input$county),],
@@ -198,40 +191,19 @@ Predictions are based on a linear regression predicting the mean household food 
 Row 
 -----------------------------------------------------------------------
 
-###  State-level
+### County-level
 ```{r,echo=FALSE}
+
 cnty_shp_join2 <- reactive({
   subset(ia_shp_join, COUNTYNAME == input$county2) 
   })
-renderLeaflet({
-leaflet(ia_shp_join,height=500, width=1000) %>%
-  addTiles() %>%
-  #setView(lng = 0, lat = 30, zoom = 2) %>%
-  addPolygons(
-    fillColor = ~ pal(lasso_pred),
-    color = "white",
-    fillOpacity = 0.6,
-    label = ~labels,
-    highlight = highlightOptions(
-      color = "black",
-      bringToFront = TRUE
-    ))%>%
-  leaflet::addLegend(
-    pal = pal, values = ~lasso_pred,
-    opacity = 0.7, title = "Predicted \n Expenditure",
-    position = "topright"
-  )
-})
-```
-
-### County-level
-```{r,echo=FALSE}
 renderLeaflet({
 leaflet(cnty_shp_join2(),height=500, width=1000) %>%
   addTiles() %>%
   #setView(lng = 0, lat = 30, zoom = 2) %>%
   addPolygons(
     fillColor = ~ pal(lasso_pred),
+    stroke=FALSE,
     color = "white",
     fillOpacity = 0.6,
     label = ~labels,
@@ -239,6 +211,11 @@ leaflet(cnty_shp_join2(),height=500, width=1000) %>%
       color = "black",
       bringToFront = TRUE
     )
+  )%>%
+  leaflet::addLegend(
+    pal = pal, values = ~lasso_pred,
+    opacity = 0.7, title = "Predicted \nFood Expenditure",
+    position = "topright"
   )
 })
 
@@ -252,10 +229,10 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("X", "lasso_pred","female", "avg_hhsize", "hispanic",
+temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("GEOID", "lasso_pred","female", "avg_hhsize", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
                                   "married", "disability"))%>%
-                  rename(Location = X, 
+                  rename(
                          `Predicted Expenditure` = lasso_pred)
 renderDataTable({
 rbind(temp2[which(ia_shp_join$COUNTYNAME == input$county2),],
