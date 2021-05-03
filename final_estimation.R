@@ -123,3 +123,5 @@ ia_shp <- block_groups(state = "IA")  #TIME INTENSIVE 1st run (so each dashboard
 saveRDS(ia_shp, "ia_shp.RDS")
 county_list <- unique(counties("Iowa")$NAME)
 saveRDS(county_list, "county_list.RDS")
+all_counties <- block_groups(state = 'IA', county = county_list)
+saveRDS(all_counties, "all_counties.RDS")
