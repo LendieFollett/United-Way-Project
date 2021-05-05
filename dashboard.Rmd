@@ -17,7 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 #Xmake neighborhood dividers less prominent (white dividers less thick)
 #Xcolor to rocket instead of viridis
 #consistent color --> goodness color mapping
-#(reverse it for the probability scale)
 #Probability of being food SECURE
 #Xhave GEOID in the table so can look up map locations in table
 
