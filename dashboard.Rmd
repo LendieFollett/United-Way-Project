@@ -10,15 +10,6 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-#Xremove state-level maps
-#Xround hover output
-#Xround predicted probability in table output
-#definition of expenditure in the intro page 
-#Xmake neighborhood dividers less prominent (white dividers less thick)
-#Xcolor to rocket instead of viridis
-#consistent color --> goodness color mapping
-#Probability of being food SECURE
-#Xhave GEOID in the table so can look up map locations in table
 
 #Incorporating Shiny (interactive) components into flexdashboard:
 #https://rmarkdown.rstudio.com/flexdashboard/shiny.html#simple_example
