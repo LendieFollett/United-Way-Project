@@ -1,5 +1,5 @@
 ---
-title: "United Way Food Insecurity Predictions"
+title: "Iowa Food Insecurity Predictions"
 runtime: shiny
 output: 
   flexdashboard::flex_dashboard:
@@ -80,7 +80,7 @@ Inputs {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r, echo=FALSE}
-selectInput("county", label = "Select County:", choices = unique(ia_shp_join$COUNTYNAME), selected = "Polk County")
+selectInput("county", label = "Select County:", choices = unique(ia_shp_join$COUNTYNAME)[order(unique(ia_shp_join$COUNTYNAME))], selected = "Polk County")
 
 ```
 
@@ -90,7 +90,7 @@ Row
 
 ### Introduction
 
-The estimates refer to the proportion of food insecure households in each block group. The predictions are made in two stages. First, we use Current Population Survey data to estimate the probability that a given household is food insecure in at least one dimension in the past year. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain the predicted proportion of food insecure households in each block group.
+The estimates refer to the proportion of food insecure households in each block group. The predictions are made in two stages. First, we use Current Population Survey (CPS) data to estimate the probability that a given household is food insecure in at least one dimension in the past year. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain the predicted proportion of food insecure households in each block group.
 
 
 
@@ -128,7 +128,7 @@ leaflet(cnty_shp_join(),height=500, width=1000) %>%
   )%>%
   leaflet::addLegend(
     pal = pal_bin, values = ~lasso_bin_pred,
-    opacity = 0.7, title = "Predicted \nProbability",
+    opacity = 0.7, title = "Proportion of\nFood Insecure\nHouseholds",
     position = "topright"
   )
 })
@@ -163,7 +163,7 @@ Inputs {.sidebar}
 
 
 ```{r, echo=FALSE}
-selectInput("county2", label = "Select County:", choices = unique(ia_shp_join$COUNTYNAME), selected = "Polk County")
+selectInput("county2", label = "Select County:", choices = unique(ia_shp_join$COUNTYNAME)[order(unique(ia_shp_join$COUNTYNAME))], selected = "Polk County")
 
 ```
 
@@ -172,7 +172,7 @@ Row
 
 ### Introduction
 
-The estimates refer to weekly average food expenditure per person. The predictions are made in two stages. First, we use Current Population Survey data to estimate weekly food expenditure per person at the household level. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain average food expenditure per person in each block group.
+The estimates refer to weekly average food expenditure per person. The predictions are made in two stages. First, we use Current Population Survey (CPS) data to estimate weekly food expenditure per person at the household level. The LASSO technique is used to select demographic variables that improve out-of-sample prediction performance and survey sampling weights are used to decrease prediction bias. Second, we apply the first-stage parameter estimates to block-group data from the American Community Survey (ACS) to obtain average food expenditure per person in each block group.
 
 
 Row 
@@ -201,7 +201,7 @@ leaflet(cnty_shp_join2(),height=500, width=1000) %>%
   )%>%
   leaflet::addLegend(
     pal = pal, values = ~lasso_pred,
-    opacity = 0.7, title = "Predicted \nFood Expenditure",
+    opacity = 0.7, title = "Weekly Average\nFood Expenditure\nPer Person",
     position = "topright"
   )
 })
