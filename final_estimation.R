@@ -136,7 +136,7 @@ p1 <- ggplot(data = lasso_coefdf[-1,]) +
   scale_fill_distiller("Effect",,palette = "RdYlGn", limit = limit) +
   labs(x = "",
        y = "Less spent ($)                    More spent ($)") +
-  ggtitle("Weekly amount spent on food")
+  ggtitle("Weekly amount spent on food") + theme(legend.position = "none")
 
 lasso_bin_coefdf <- data.frame(coef = as.vector(lasso_bin_coef), 
                            type = rownames(lasso_bin_coef))
@@ -147,8 +147,11 @@ p2 <- ggplot(data = lasso_bin_coefdf[-1,]) +
   scale_fill_distiller("Effect",palette = "RdYlGn", direction = -1, limit = limit) +
   labs(x = "Characteristic",
        y = "Decreases probability       Increases probability") +
-  ggtitle("Probability of Food Insecurity\n  ")
+  ggtitle("Probability of Food Insecurity\n  ") + theme(legend.position = "none")
 
 
 p3 <- grid.arrange(p1, p2, nrow = 2)
+ggsave("coef_vis.pdf", width = 15, height = 10, plot = p3)
 
+saveRDS(lasso_coefdf[-1,], "lasso_coefdf.RDS")
+saveRDS(lasso_bin_coefdf[-1,], "lasso_bin_coefdf.RDS")

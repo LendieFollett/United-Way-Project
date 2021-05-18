@@ -71,6 +71,11 @@ pal <- colorBin(
   bins = seq(floor(min(ia_shp_join$lasso_pred, na.rm = TRUE)), floor(max(ia_shp_join$lasso_pred, na.rm = TRUE)) + .1, by = 5)
 )
 
+lasso_coefdf <- readRDS("lasso_coefdf.RDS")
+rownames(lasso_coefdf) <- lasso_coefdf$type
+
+lasso_bin_coefdf <- readRDS("lasso_bin_coefdf.RDS")
+rownames(lasso_bin_coefdf) <- lasso_bin_coefdf$type
 ```
 
 Presence of Food Insecurity
@@ -142,11 +147,16 @@ Row
 ### Predictions
 
 ```{r, echo=FALSE}
-temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("GEOID","COUNTYNAME","lasso_bin_pred", "female", "avg_hhsize", "hispanic",
+temp1 <- ia_shp_join %>% as.data.frame%>%dplyr::select(c("GEOID","COUNTYNAME","lasso_bin_pred", "female", "hispanic",
                                   "black", "kids", "elderly", "education", "employed",
                                   "married", "disability"))%>%
                   rename( 
                          `Predicted Probability` = lasso_bin_pred)
+
+temp1[,c("female", "hispanic", "black", "kids", "elderly", "education", "employed","married", "disability")] <-t(apply(temp1[,c("female",  "hispanic",
+                                  "black", "kids", "elderly", "education", "employed","married", "disability")], 1, function(x){x*lasso_bin_coefdf[c("female", "hispanic",
+                                  "black", "kids", "elderly", "education", "employed", "married", "disability"),"coef"]
+}))
 renderDataTable({
 rbind(temp1[which(ia_shp_join$COUNTYNAME == input$county),],
       temp1[which(ia_shp_join$COUNTYNAME != input$county),])
@@ -221,6 +231,12 @@ temp2 <- ia_shp_join %>%as.data.frame%>% dplyr::select(c("GEOID","COUNTYNAME", "
                                   "married", "disability"))%>%
                   rename(
                          `Predicted Expenditure` = lasso_pred)
+
+
+temp2[,c("female", "hispanic", "black", "kids", "elderly", "education", "employed","married", "disability")] <-t(apply(temp2[,c("female",  "hispanic",
+                                  "black", "kids", "elderly", "education", "employed","married", "disability")], 1, function(x){x*lasso_coefdf[c("female", "hispanic",
+                                  "black", "kids", "elderly", "education", "employed", "married", "disability"),"coef"]
+}))
 renderDataTable({
 rbind(temp2[which(ia_shp_join$COUNTYNAME == input$county2),],
       temp2[which(ia_shp_join$COUNTYNAME != input$county2),])
