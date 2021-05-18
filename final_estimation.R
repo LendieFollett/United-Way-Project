@@ -125,3 +125,30 @@ county_list <- unique(counties("Iowa")$NAME)
 saveRDS(county_list, "county_list.RDS")
 all_counties <- block_groups(state = 'IA', county = county_list)
 saveRDS(all_counties, "all_counties.RDS")
+
+
+lasso_coefdf <- data.frame(coef = as.vector(lasso_coef), 
+                           type = rownames(lasso_coef))
+limit <- max(abs(lasso_coefdf[-1,"coef"])) * c(-1, 1)
+p1 <- ggplot(data = lasso_coefdf[-1,]) +
+  geom_col(aes(x = type, y = coef, fill = coef)) +
+  scale_y_continuous(limits = c(-max(abs(lasso_coefdf[-1,"coef"])),max(abs(lasso_coefdf[-1,"coef"]))))+
+  scale_fill_distiller("Effect",,palette = "RdYlGn", limit = limit) +
+  labs(x = "",
+       y = "Less spent ($)                    More spent ($)") +
+  ggtitle("Weekly amount spent on food")
+
+lasso_bin_coefdf <- data.frame(coef = as.vector(lasso_bin_coef), 
+                           type = rownames(lasso_bin_coef))
+limit <- max(abs(lasso_bin_coefdf[-1,"coef"])) * c(-1, 1)
+p2 <- ggplot(data = lasso_bin_coefdf[-1,]) +
+  geom_col(aes(x = type, y = coef, fill = coef)) +
+  scale_y_continuous(limits = c(-max(abs(lasso_bin_coefdf[-1,"coef"])),max(abs(lasso_bin_coefdf[-1,"coef"]))))+
+  scale_fill_distiller("Effect",palette = "RdYlGn", direction = -1, limit = limit) +
+  labs(x = "Characteristic",
+       y = "Decreases probability       Increases probability") +
+  ggtitle("Probability of Food Insecurity\n  ")
+
+
+p3 <- grid.arrange(p1, p2, nrow = 2)
+

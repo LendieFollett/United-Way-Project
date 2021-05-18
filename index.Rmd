@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Incorporating Shiny (interactive) components into flexdashboard:
 #https://rmarkdown.rstudio.com/flexdashboard/shiny.html#simple_example
+library(shiny)
 library(flexdashboard)
 library(ggplot2)
 library(dplyr)
@@ -22,7 +23,7 @@ library(leaflet)
 library(htmltools)
 library(tigris)
 library(totalcensus)
-library(shiny)
+
 acs <- read.csv("acs_predictions.csv")#read acs data with predictions
 
 #round predictions

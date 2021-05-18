@@ -1,9 +1,2 @@
 name: "my-website"
-navbar:
-  title: " "
-  left:
-    - text: "Home"
-      href: index.html
-output:
-  html_document:
-    theme: darkly
+output_dir: docs
